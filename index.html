@@ -1,0 +1,192 @@
+<!--
+  Copyright 2018 LNFWebsite
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!doctype html>
+<html>
+<head>
+  <title>Streamly</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Portable, independent, web-based, simple streaming YouTube video queues and playlists for music videos, audiobooks, etc." />
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Pacifico|Roboto" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css" type="text/css" />
+  <link rel="shortcut icon" id="favicon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAAAiCAMAAAANmfvwAAABDlBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABxUYW9AAAAWXRSTlMAAQIDBAUGCAkRFBUZGhscHiAhJyorLzI0ODo7PUZMTlBVVldYWVtcXV5hZHB1foKDiIuPlZiboKKlpqirr7CytcDDyMrMzs/R09Xa3N7g4ubp7e/x9/n7/Ud7aO4AAAE3SURBVBgZlcFpOxtRAIbhZ8YgltBaopZEHanamtKgtYaSklJ0xPL+/z8iGedMZq5MPrhv3mlgslzZ2aksT/aTbfpQsYMpun24UMr5OGneN3XZ9EjoO1KGA5+Yd6pMxx5OVT1sY31STwUifqg3jaF8TWn/fdo+y1oFCv+UUqLtXpahxSs/KeGOlrwcQ2TwhxJGgWU5Bit/ptgSsCfHEJu9l7ULXMkxdPgbL4r8AR7kGJLmFQmBphxD0pQiTeCvHEPC/IMiV8C+HENs7LesX8CaHIOVqyr2FZiQY4j4K8/q+Ah4TVmGtplbJYQeLRuyvgAjp0pZp63/SW/Ogtx3pT0GRErqqYh1oh6OcIKGMl0GxHKXylAfJCHYV5effaQthEoJ5+jiL94odl3yyTRc3KrV67Wt4jDv8wr7Zt73xzlZAQAAAABJRU5ErkJggg==" type="image/x-icon" />
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css" type="text/css" />
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="res/css/styles.css" type="text/css" />
+  
+  <!-- External scripts -->
+  <script src="//code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+  <script src="//code.jquery.com/ui/1.12.0/jquery-ui.min.js" crossorigin="anonymous"></script>
+  <script src="//cdn.rawgit.com/zenorocha/clipboard.js/v1.5.12/dist/clipboard.min.js"></script>
+  <script defer src="//use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+</head>
+<body>
+  <div id="dataFramesContainer"></div>
+  <a id="forkme" href="https://github.com/LNFWebsite/Streamly" target="_blank"><img id="forkmeImage" style="position: absolute; top: 65px; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+  <header>
+    <h1 id="title"><a href="#" style="color:white;text-decoration:none;">Streamly <span style="color:blue;">Beta</span></a></h1>
+    <form action="javascript:input(0);" method="get" id="searchForm">
+      <input type="text" id="inputBox" title="Search, drag and drop video, or paste its URL here" autofocus>
+    </form>
+    <button id="saveButton" data-clipboard-text="https://lnfwebsite.github.io/Streamly/" onclick="saveButton();" title="Copy your playlist to clipboard"></button>
+    <span class="fas fa-cog" id="settingsButton" onclick="toggleMenu('settings');" title="Settings"></span>
+    <span class="fas fa-exchange" id="stationIcon" onclick="disconnectStation();" title="Streamly Station is connected. Click to disconnect..."></span>
+  </header>
+  <div id="main">
+    <div id="floatingMenuShadow"></div>
+    <div id="dropOverlay"><p>(Drag &amp; drop videos here)</p></div>
+    <div id="searchResultsWindow" class="floatingMenu">
+      <h2>Search Results:</h2>
+      <div class="floatingMenuCloseButton" onclick="toggleMenu('searchResults');">Close</div>
+    </div>
+    <div id="settingsWindow" class="floatingMenu">
+      <div class="floatingMenuCloseButton" onclick="toggleMenu('settings');">Close</div>
+      <h1>Settings</h1><hr>
+      <h2>General</h2><hr>
+      <p>
+          <label for="sideBySideToggle">Side by side view:</label>
+          <input type="checkbox" id="sideBySideToggle" onchange="toggleSideBySide();">
+      </p>
+      <p>
+        <label for="searchClose">Close search window on adding video?</label>
+        <input type="checkbox" id="searchClose" onchange="toggleSearchClose();">
+        <br><sup>Note: To do the reverse of this setting for one search press <code>Shift+\</code></sup>
+      </p>
+      <h2>Streamly Station</h2><hr>
+      <p><i>Connect to a Streamly Station</i></p>
+      <form action="javascript:actionConnectStation();" method="get">
+        <p>
+          <label for="connectStationBox">Address:</label>
+          <input type="textbox" id="connectStationBox" placeholder="Enter the Streamly Station address (ex. 192.168.0.15)..." title="Enter the Streamly Station address">
+        </p>
+        <p>
+          <label for="stationRemote">Remote?</label>
+          <input type="checkbox" id="stationRemote" onchange="toggleRemote();">
+        </p>
+        <p>
+          <label for="zenModeToggle">Zen Mode?</label>
+          <input type="checkbox" id="zenModeToggle" onchange="toggleZen();">
+        </p>
+      </form>
+    </div>
+    <div id="blurBackground"></div>
+    <form action="javascript:input(2);" method="get">
+      <input type="textbox" id="playlistNameBox" placeholder="Streamly Playlist" title="Enter your playlist name" />
+    </form>
+    <table id="videosTable"></table>
+    <div id="links">
+      <a href="//github.com/LNFWebsite/Streamly/wiki/Getting-Started" target="_blank">Getting Started</a> |
+      <a href="//github.com/LNFWebsite/Streamly/wiki/Playlists" target="_blank">Playlists Wiki</a> |
+      <a href="//lnfwebsite.github.io/Streamly-Import/" target="_blank">Import Playlists</a> |
+      <a href="//www.reddit.com/r/StreamlyReddit/" target="_blank">StreamlyReddit</a>
+      <br>
+      <a href="javascript:shareOnRedditAd();">Share your playlist on Reddit!</a>
+      <p style="margin: 0;padding: 0;">
+        <a style="color:orangered" target="_blank" href="//www.reddit.com/r/StreamlyReddit/comments/7w7pyd/inbox_searching_has_finally_been_released_no_more/?st=jdexukqi&sh=eda014d3">In-box searching has been released! No more pop-ups!</a>
+      </p>
+    </div>
+  </div>
+  <footer>
+    <div id="previousVideo" onclick="backVideo();" title="Back">
+      <div class="videoNameContainer">
+        <p class="videoName"></p>
+      </div>
+      <div class="videoImageContainer">
+        <div class="videoImageWrapper">
+          <img class="videoImage" src="" />
+          <span class="fas fa-backward"></span>
+          <p class="videoTime"></p>
+        </div>
+      </div>
+    </div>
+    <div id="playlistInterface">
+      <div id="youtubeContainer" title="Click to pause">
+        <span id="remotePauseIcon" class="fas fa-play"></span>
+        <iframe id="youtube" src="" allowfullscreen></iframe>
+      </div>
+      <div id="currentVideoTiming">
+        <span id="currentTime">0:00</span>
+        <span id="progressContainer">
+          <span id="progress" style="width:0%;"></span>
+        </span>
+        <span id="videoTime">0:00</span>
+      </div>
+    </div>
+    <div id="nextVideo" onclick="forwardVideo();" title="Forward">
+      <div class="videoImageContainer">
+        <div class="videoImageWrapper">
+          <img class="videoImage" src="" />
+          <span class="fas fa-forward"></span>
+          <p class="videoTime"></p>
+        </div>
+      </div>
+      <div class="videoNameContainer">
+        <p class="videoName"></p>
+      </div>
+    </div>
+    <div id="settings">
+      <span class="fas fa-arrow-circle-right" onclick="playlistFeatures.playNext();" title="Added videos will play next"></span>
+      <span class="fas fa-random" onclick="playlistFeatures.shuffle();" title="Playlist shuffle"></span>
+      <span class="fas fa-redo-alt" onclick="playlistFeatures.repeat();" title="Playlist repeat"></span>
+      <span class="fas fa-rss" onclick="playlistFeatures.autoplay();" title="Streamly Radio"></span>
+      <span class="fab fa-reddit" id="ad" onclick="shareOnReddit();" title="Share playlist on Reddit"></span>
+    </div>
+  </footer>
+  <!--
+  <div id="dialog"></div>
+  <script>
+  //this is a standard dialog box for jquery that can be used to non-annoyingly get messages to users on-load
+  $("#dialog").dialog();
+  </script>
+  -->
+  
+  <!-- JS Frontend -->
+  <script src="res/js/front/initialize.js"></script>
+  <script src="res/js/front/youtube.js"></script>
+  <script src="res/js/front/share.js"></script>
+  <script src="res/js/front/events.js"></script>
+  
+  <!-- JS Backend -->
+  <script src="res/js/back/global.js"></script>
+  <script src="res/js/back/base.js"></script>
+  <script src="res/js/back/playlistBack.js"></script>
+  <script src="res/js/back/playlistFront.js"></script>
+  <script src="res/js/back/data.js"></script>
+  <script src="res/js/back/progress.js"></script>
+  <script src="res/js/back/input.js"></script>
+  <script src="res/js/back/search.js"></script>
+  <script src="res/js/back/radio.js"></script>
+  <script src="res/js/back/station.js"></script>
+  <script src="res/js/back/toggles.js"></script>
+  
+  <!-- Start of StatCounter Code for Default Guide -->
+  <script type="text/javascript">
+  var sc_project=10543623; 
+  var sc_invisible=1; 
+  var sc_security="4c623aaf"; 
+  </script>
+  <script type="text/javascript"
+  src="https://www.statcounter.com/counter/counter.js"
+  async></script>
+  <noscript><div class="statcounter"><a title="Web Analytics"
+  href="http://statcounter.com/" target="_blank"><img
+  class="statcounter"
+  src="//c.statcounter.com/10543623/0/4c623aaf/1/" alt="Web
+  Analytics"></a></div></noscript>
+  <!-- End of StatCounter Code for Default Guide -->
+</body>
+</html>
